@@ -1,0 +1,288 @@
+// NexOps Enterprise Platform — PostgreSQL schema (Prisma ORM)
+// Mirrors the previous Mongoose models 1:1, using UUID ids so the API's
+// "id" field stays a plain string exactly like before (no frontend changes).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  admin
+  hr
+  manager
+  employee
+}
+
+enum EmployeeStatus {
+  active
+  on_leave
+  terminated
+  probation
+}
+
+enum AssetCategory {
+  laptop
+  desktop
+  monitor
+  mobile
+  accessory
+  software_license
+  other
+}
+
+enum AssetStatus {
+  available
+  assigned
+  under_repair
+  retired
+}
+
+enum AttendanceStatus {
+  present
+  absent
+  half_day
+  late
+  work_from_home
+}
+
+enum LeaveType {
+  sick
+  casual
+  annual
+  unpaid
+  maternity
+  paternity
+}
+
+enum LeaveStatus {
+  pending
+  approved
+  rejected
+  cancelled
+}
+
+enum ProjectStatus {
+  planned
+  in_progress
+  on_hold
+  completed
+  cancelled
+}
+
+enum TicketCategory {
+  it
+  hr
+  facilities
+  finance
+  other
+}
+
+enum TicketPriority {
+  low
+  medium
+  high
+  urgent
+}
+
+enum TicketStatus {
+  open
+  in_progress
+  resolved
+  closed
+}
+
+enum NotificationType {
+  info
+  success
+  warning
+  error
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  fullName  String
+  role      Role     @default(employee)
+  isActive  Boolean  @default(true)
+  avatarUrl String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  employee          Employee?
+  notifications     Notification[]
+  passwordResetOtps PasswordResetOtp[]
+}
+
+model PasswordResetOtp {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  otpHash   String
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  attempts  Int      @default(0)
+  createdAt DateTime @default(now())
+}
+
+model Department {
+  id          String     @id @default(uuid())
+  name        String     @unique
+  code        String     @unique
+  description String?
+  managerId   String?    @unique
+  manager     Employee?  @relation("DepartmentManager", fields: [managerId], references: [id])
+  employees   Employee[] @relation("EmployeeDepartment")
+  projects    Project[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+model Employee {
+  id              String         @id @default(uuid())
+  userId          String         @unique
+  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  employeeCode    String         @unique
+  departmentId    String?
+  department      Department?    @relation("EmployeeDepartment", fields: [departmentId], references: [id])
+  designation     String
+  phone           String?
+  address         String?
+  dateOfBirth     DateTime?
+  dateOfJoining   DateTime
+  status          EmployeeStatus @default(active)
+  salary          Float?
+  managerId       String?
+  manager         Employee?      @relation("EmployeeManager", fields: [managerId], references: [id])
+  subordinates    Employee[]     @relation("EmployeeManager")
+  photoPath       String?
+  resumePath      String?
+  offerLetterPath String?
+  idProofPath     String?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  managedDepartment Department?     @relation("DepartmentManager")
+  assignedAssets    Asset[]
+  attendanceRecords Attendance[]
+  leaveRequests     LeaveRequest[]  @relation("LeaveEmployee")
+  reviewedLeaves    LeaveRequest[]  @relation("LeaveReviewer")
+  ledProjects       Project[]       @relation("ProjectLead")
+  projectMembers    ProjectMember[]
+  raisedTickets     Ticket[]        @relation("TicketRaisedBy")
+  assignedTickets   Ticket[]        @relation("TicketAssignedTo")
+  ticketComments    TicketComment[]
+}
+
+model Asset {
+  id             String        @id @default(uuid())
+  assetTag       String        @unique
+  name           String
+  category       AssetCategory @default(other)
+  status         AssetStatus   @default(available)
+  purchaseDate   DateTime?
+  purchaseCost   Float?
+  warrantyExpiry DateTime?
+  assignedToId   String?
+  assignedTo     Employee?     @relation(fields: [assignedToId], references: [id])
+  notes          String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+}
+
+model Attendance {
+  id         String            @id @default(uuid())
+  employeeId String
+  employee   Employee          @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  date       DateTime
+  checkIn    DateTime?
+  checkOut   DateTime?
+  status     AttendanceStatus  @default(present)
+  createdAt  DateTime          @default(now())
+
+  @@unique([employeeId, date])
+}
+
+model LeaveRequest {
+  id            String      @id @default(uuid())
+  employeeId    String
+  employee      Employee    @relation("LeaveEmployee", fields: [employeeId], references: [id], onDelete: Cascade)
+  leaveType     LeaveType
+  startDate     DateTime
+  endDate       DateTime
+  reason        String
+  status        LeaveStatus @default(pending)
+  reviewedById  String?
+  reviewedBy    Employee?   @relation("LeaveReviewer", fields: [reviewedById], references: [id])
+  reviewComment String?
+  createdAt     DateTime    @default(now())
+}
+
+model Project {
+  id           String          @id @default(uuid())
+  name         String
+  description  String?
+  status       ProjectStatus   @default(planned)
+  startDate    DateTime?
+  endDate      DateTime?
+  departmentId String?
+  department   Department?     @relation(fields: [departmentId], references: [id])
+  leadId       String?
+  lead         Employee?       @relation("ProjectLead", fields: [leadId], references: [id])
+  members      ProjectMember[]
+  createdAt    DateTime        @default(now())
+}
+
+model ProjectMember {
+  id            String   @id @default(uuid())
+  projectId     String
+  project       Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  employeeId    String
+  employee      Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  roleInProject String?
+
+  @@unique([projectId, employeeId])
+}
+
+model Ticket {
+  id           String          @id @default(uuid())
+  subject      String
+  description  String
+  category     TicketCategory  @default(other)
+  priority     TicketPriority  @default(medium)
+  status       TicketStatus    @default(open)
+  raisedById   String
+  raisedBy     Employee        @relation("TicketRaisedBy", fields: [raisedById], references: [id])
+  assignedToId String?
+  assignedTo   Employee?       @relation("TicketAssignedTo", fields: [assignedToId], references: [id])
+  comments     TicketComment[]
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+}
+
+model TicketComment {
+  id        String   @id @default(uuid())
+  ticketId  String
+  ticket    Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    Employee @relation(fields: [authorId], references: [id])
+  message   String
+  createdAt DateTime @default(now())
+}
+
+model Notification {
+  id        String           @id @default(uuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String
+  type      NotificationType @default(info)
+  isRead    Boolean          @default(false)
+  link      String?
+  createdAt DateTime         @default(now())
+}
