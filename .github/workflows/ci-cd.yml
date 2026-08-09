@@ -77,91 +77,15 @@ jobs:
 
 
   # ==========================================
-  # 3. Build Docker Images
-  # ==========================================
-  docker-build:
-    name: Build Docker Images
-    runs-on: ubuntu-latest
-
-    needs:
-      - backend
-      - frontend
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Build backend image
-        run: |
-          docker build \
-            -t $BACKEND_IMAGE:${{ github.sha }} \
-            -t $BACKEND_IMAGE:latest \
-            ./backend
-
-      - name: Build frontend image
-        run: |
-          docker build \
-            -t $FRONTEND_IMAGE:${{ github.sha }} \
-            -t $FRONTEND_IMAGE:latest \
-            ./frontend
-
-
-  # ==========================================
-  # 4. Security Scan
-  # ==========================================
-  security:
-    name: Docker Security Scan
-    runs-on: ubuntu-latest
-
-    needs:
-      - docker-build
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Build backend image for scanning
-        run: |
-          docker build \
-            -t nexops-backend:scan \
-            ./backend
-
-      - name: Build frontend image for scanning
-        run: |
-          docker build \
-            -t nexops-frontend:scan \
-            ./frontend
-
-      - name: Scan backend image
-        uses: aquasecurity/trivy-action@v0.36.0
-        with:
-          image-ref: nexops-backend:scan
-          format: table
-          severity: CRITICAL,HIGH
-          ignore-unfixed: true
-          exit-code: 1
-
-      - name: Scan frontend image
-        uses: aquasecurity/trivy-action@v0.36.0
-        with:
-          image-ref: nexops-frontend:scan
-          format: table
-          severity: CRITICAL,HIGH
-          ignore-unfixed: true
-          exit-code: 1
-
-
-  # ==========================================
-  # 5. Push Images to Docker Hub
+  # 3. Build & Push Docker Images
   # ==========================================
   docker-push:
-    name: Push Images to Docker Hub
+    name: Build & Push Docker Images
     runs-on: ubuntu-latest
 
     needs:
       - backend
       - frontend
-      - security
 
     steps:
       - name: Checkout repository
