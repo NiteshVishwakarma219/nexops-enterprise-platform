@@ -16,7 +16,6 @@ A modern, production-style Enterprise HR & Operations Management System built wi
 ![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react)
 ![Node.js](https://img.shields.io/badge/Node.js-22-339933?style=for-the-badge&logo=node.js)
 ![Express.js](https://img.shields.io/badge/Express.js-Backend-000000?style=for-the-badge&logo=express)
-![MongoDB](https://img.shields.io/badge/MongoDB-Database-47A248?style=for-the-badge&logo=mongodb)
 ![JWT](https://img.shields.io/badge/JWT-Authentication-000000?style=for-the-badge&logo=jsonwebtokens)
 ![Tailwind CSS](https://img.shields.io/badge/TailwindCSS-38BDF8?style=for-the-badge&logo=tailwindcss)
 ![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite)
@@ -91,8 +90,7 @@ The project focuses on clean architecture, modular design, scalability, and main
 
 ## Database
 
-- MongoDB
-- Mongoose
+- PostgreSQL
 
 ---
 
@@ -287,13 +285,35 @@ Create
 Add
 
 ```env
-PORT=5000
 
-MONGO_URI=YOUR_MONGODB_CONNECTION_STRING
+# Copy this file to .env and fill in real values. Never commit .env itself.
 
-JWT_SECRET=YOUR_SECRET_KEY
+# Connect to Postgres via the shared transaction-mode pooler (IPv4-only)
+DATABASE_URL="postgresql://postgres.osatjrcydiadrbadkxzs:[YOUR-PASSWORD]@aws-0-ap-northeast-1.pooler.supabase.com:6543/postgres?pgbouncer=true"
 
-JWT_EXPIRE=7d
+# Connect to Postgres via the shared session-mode pooler (used for migrations)
+DIRECT_URL="postgresql://postgres.osatjrcydiadrbadkxzs:[YOUR-PASSWORD]@aws-0-ap-northeast-1.pooler.supabase.com:5432/postgres"
+
+ALLOWED_ORIGIN=*
+ADMIN_KEY=change-me-to-a-long-random-string
+
+EMAIL_USER=
+EMAIL_PASS=
+NOTIFY_EMAIL=
+RESEND_API_KEY=
+
+JWT_SECRET=change-this-super-secret-key-in-production-please
+JWT_EXPIRES_IN=1d
+RESET_TOKEN_EXPIRE_MINUTES=10
+
+APP_NAME=NexOps Enterprise Platform
+NODE_ENV=development
+PORT = 5000
+FRONTEND_URL=http://localhost:5173
+
+UPLOAD_DIR=uploads
+MAX_UPLOAD_SIZE_MB=10
+
 ```
 
 Run
@@ -306,26 +326,6 @@ Backend
 
 ```
 http://localhost:5000
-```
-
----
-
-# MongoDB Setup
-
-1. Create a free MongoDB Atlas account.
-
-2. Create a Cluster.
-
-3. Create a Database User.
-
-4. Whitelist your IP.
-
-5. Copy the connection string.
-
-6. Paste it into
-
-```env
-MONGO_URI=
 ```
 
 ---
