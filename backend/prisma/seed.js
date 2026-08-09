@@ -20,20 +20,21 @@ async function createUser({
   const hashedPassword = await bcrypt.hash(password, 10);
 
   const user = await prisma.user.upsert({
-    where: { email },
-    update: {
-      fullName,
-      role,
-      isActive: true,
-    },
-    create: {
-      email,
-      password: hashedPassword,
-      fullName,
-      role,
-      isActive: true,
-    },
-  });
+  where: { email },
+  update: {
+    password: hashedPassword,
+    fullName,
+    role,
+    isActive: true,
+  },
+  create: {
+    email,
+    password: hashedPassword,
+    fullName,
+    role,
+    isActive: true,
+  },
+});
 
   await prisma.employee.upsert({
     where: { userId: user.id },
@@ -59,40 +60,40 @@ async function main() {
   console.log("Starting database seed...");
 
   await createUser({
-    email: "admin@nexops.com",
-    password: "Admin@123",
-    fullName: "System Administrator",
-    role: "admin",
-    employeeCode: "EMP001",
-    designation: "System Administrator",
-  });
+  email: "admin@nexops.com",
+  password: "Admin@NexOps2026",
+  fullName: "System Administrator",
+  role: "admin",
+  employeeCode: "EMP001",
+  designation: "System Administrator",
+});
 
-  await createUser({
-    email: "hr@nexops.com",
-    password: "HR@123",
-    fullName: "HR Manager",
-    role: "hr",
-    employeeCode: "EMP002",
-    designation: "HR Manager",
-  });
+await createUser({
+  email: "hr@nexops.com",
+  password: "HrPortal@2026",
+  fullName: "HR Manager",
+  role: "hr",
+  employeeCode: "EMP002",
+  designation: "HR Manager",
+});
 
-  await createUser({
-    email: "manager@nexops.com",
-    password: "Manager@123",
-    fullName: "Department Manager",
-    role: "manager",
-    employeeCode: "EMP003",
-    designation: "Project Manager",
-  });
+await createUser({
+  email: "manager@nexops.com",
+  password: "Manager@2026",
+  fullName: "Department Manager",
+  role: "manager",
+  employeeCode: "EMP003",
+  designation: "Project Manager",
+});
 
-  await createUser({
-    email: "employee@nexops.com",
-    password: "Employee@123",
-    fullName: "Demo Employee",
-    role: "employee",
-    employeeCode: "EMP004",
-    designation: "Software Engineer",
-  });
+await createUser({
+  email: "employee@nexops.com",
+  password: "Employee@2026",
+  fullName: "Demo Employee",
+  role: "employee",
+  employeeCode: "EMP004",
+  designation: "Software Engineer",
+});
 
   console.log("Database seed completed successfully.");
 }
