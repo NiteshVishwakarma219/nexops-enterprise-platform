@@ -81,7 +81,9 @@ const createEmployee = asyncHandler(async (req, res) => {
     return tx.employee.create({
       data: {
         userId: user.id, employeeCode, departmentId: departmentId || null, designation, phone, address,
-        dateOfBirth: dateOfBirth || null, dateOfJoining, status: status || 'active', salary: salary ?? null,
+        dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
+        dateOfJoining: new Date(dateOfJoining),
+        status: status || 'active', salary: salary ?? null,
         managerId: managerId || null,
       },
       include: INCLUDE,
@@ -125,8 +127,8 @@ const updateEmployee = asyncHandler(async (req, res) => {
   if (designation !== undefined) data.designation = designation;
   if (phone !== undefined) data.phone = phone;
   if (address !== undefined) data.address = address;
-  if (dateOfBirth !== undefined) data.dateOfBirth = dateOfBirth || null;
-  if (dateOfJoining !== undefined) data.dateOfJoining = dateOfJoining;
+  if (dateOfBirth !== undefined) data.dateOfBirth = dateOfBirth ? new Date(dateOfBirth) : null;
+  if (dateOfJoining !== undefined) data.dateOfJoining = new Date(dateOfJoining);
   if (status !== undefined) data.status = status;
   if (salary !== undefined) data.salary = salary;
   if (managerId !== undefined) data.managerId = managerId || null;
