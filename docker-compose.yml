@@ -1,9 +1,8 @@
 services:
 
   postgres:
-    image: postgres:16
+    image: postgres:16-alpine
     container_name: nexops-postgres
-
     restart: unless-stopped
 
     environment:
@@ -17,31 +16,47 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d nexops"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+
   backend:
-
-    build:
-      context: ./backend
-
+    image: nexops-backend:1.0.0
     container_name: nexops-backend
-
     restart: unless-stopped
 
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
 
     ports:
-      - "5000:8000"
+      - "8001:8000"
 
-    env_file:
-      - backend/.env
+    environment:
+      NODE_ENV: production
+      PORT: 8000
+
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/nexops?schema=public
+
+      JWT_SECRET: local-docker-development-secret-change-this
+      JWT_EXPIRES_IN: 1d
+
+      ALLOWED_ORIGIN: http://localhost
+      FRONTEND_URL: http://localhost
+
+      ADMIN_KEY: local-docker-admin-key-change-this
+      RESET_TOKEN_EXPIRE_MINUTES: 10
+
+      UPLOAD_DIR: uploads
+      MAX_UPLOAD_SIZE_MB: 10
+
 
   frontend:
-
-    build:
-      context: ./frontend
-
+    image: nexops-frontend:1.0.0
     container_name: nexops-frontend
-
     restart: unless-stopped
 
     depends_on:
@@ -50,6 +65,6 @@ services:
     ports:
       - "80:80"
 
-volumes:
 
+volumes:
   postgres_data:
